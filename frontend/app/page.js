@@ -1,5 +1,6 @@
+"use client";
 import { useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import axios from "axios";
 
 export default function uploadForm() {
@@ -27,22 +28,23 @@ export default function uploadForm() {
   const handleFormChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // to do see if i can move this array outside
+      // to do: I need to  see if i can move this array outside.
       const fileType = [
         "image/jpe",
         "image/png",
         "mage/jpg",
         "application/pdf",
       ];
-      if (fileType.includes(file.type)) {
+      if (!fileType.includes(file.type)) {
         setError("please upload a PDF or image");
+        return;
       }
       setFile(file);
       setError("");
     }
   };
 
-  //submit
+  //submit function
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -60,7 +62,7 @@ export default function uploadForm() {
       submitData.append("firstName", formData.firstName);
       submitData.append("lastName", formData.lastName);
       submitData.append("dateOfBirth", formData.dateOfBirth);
-      submitData.append("processingMethod", formData.processingMethod);
+      // submitData.append("processingMethod", formData.processMethod);
 
       const response = await axios.post(
         "http://localhost:3001/api/process",
@@ -73,10 +75,14 @@ export default function uploadForm() {
       );
 
       // Navigate to results page with data
-      router.push({
-        pathname: "/results",
-        query: { data: JSON.stringify(response.data) },
-      });
+      const queryString = `data=${encodeURIComponent(
+        JSON.stringify(response.data)
+      )}`;
+      // router.push({
+      //   pathname: "/resultDisplay",
+      //   query: { data: JSON.stringify(response.data) },
+      // });
+      router.push(`/resultDisplay?${queryString}`);
     } catch (err) {
       setError(
         err.response?.data?.error ||
@@ -171,7 +177,9 @@ export default function uploadForm() {
                   onChange={inputChange}
                   className="mr-2"
                 />
-                <span>Standard Extraction (Tesseract.js)</span>
+                <span className=" font-medium text-gray-700 mb-2">
+                  Standard Extraction
+                </span>
               </label>
               <label className="flex items-center">
                 <input
@@ -182,7 +190,9 @@ export default function uploadForm() {
                   onChange={inputChange}
                   className="mr-2"
                 />
-                <span>AI Extraction (Gemini AI)</span>
+                <span className=" font-medium text-gray-700 mb-2">
+                  AI Extraction
+                </span>
               </label>
             </div>
           </div>
