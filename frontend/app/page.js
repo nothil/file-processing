@@ -14,23 +14,17 @@ const ALLOWED_MIME_TYPES = [
 ];
 
 export default function UploadForm() {
-  // --- State Management ---
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
   const [error, setError] = useState("");
 
-  // Initial state for personal information and processing options
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     dateOfBirth: "",
-    processMethod: "standard", // Default
+    processMethod: "standard", // Default currently not working
   });
 
-  /**
-   * Handles changes for standard text and radio inputs (not the file input).
-   * @param {Object} e - The DOM event object.
-   */
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
@@ -63,7 +57,7 @@ export default function UploadForm() {
   /**
    * Submits the form data and file to the backend API.
    * Handles loading state, error display, and navigation upon success.
-   * @param {Object} e - The DOM event object.
+   
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -83,7 +77,7 @@ export default function UploadForm() {
       submitData.append("firstName", formData.firstName);
       submitData.append("lastName", formData.lastName);
       submitData.append("dateOfBirth", formData.dateOfBirth);
-      submitData.append("processingMethod", formData.processMethod);
+      // submitData.append("processingMethod", formData.processMethod);
 
       // Use axios to post the multipart/form-data to the API
       const response = await axios.post(API_ENDPOINT, submitData, {
@@ -211,9 +205,7 @@ export default function UploadForm() {
                   onChange={handleInputChange}
                   className="mr-3 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
-                <span className="font-medium text-gray-700">
-                  AI Extraction (High Accuracy, may take longer)
-                </span>
+                <span className="font-medium text-gray-700">AI Extraction</span>
               </label>
             </div>
           </fieldset>
