@@ -1,7 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const cors = require("cors");
-const path = require("path");
+//const path = require("path");
 const fs = require("fs");
 require("dotenv").config();
 
@@ -29,7 +29,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 10 * 1024 * 1024,
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = [
@@ -60,11 +60,11 @@ app.post("/api/process", upload.single("file"), async (req, res) => {
 
     const { firstName, lastName, dateOfBirth, processingMethod } = req.body;
 
-    // Validate required fields
+    // this is the validation of fields
     if (!firstName || !lastName || !dateOfBirth) {
       return res
         .status(400)
-        .json({ error: "All personal information fields are required" });
+        .json({ error: "personal information fields are required" });
     }
 
     let extractionResults = {};
@@ -95,14 +95,12 @@ app.post("/api/process", upload.single("file"), async (req, res) => {
       timestamp: new Date().toISOString(),
     };
 
-    // Clean up uploaded file
     fs.unlinkSync(req.file.path);
 
     res.json(response);
   } catch (error) {
     console.error("Processing error:", error);
 
-    // Clean up file if it exists
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
@@ -113,7 +111,6 @@ app.post("/api/process", upload.single("file"), async (req, res) => {
   }
 });
 
-// Health check endpoint
 app.get("/api/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
