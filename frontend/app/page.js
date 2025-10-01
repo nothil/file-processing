@@ -1,92 +1,109 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import axios from "axios";
 
-export default function uploadForm() {
+// The  endpoint for submitting the document and form data.
+const API_ENDPOINT = "http://localhost:3001/api/process";
+
+// List of allowed MIME types for file uploads.
+const ALLOWED_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/jpg",
+  "application/pdf",
+];
+
+export default function UploadForm() {
+  // --- State Management ---
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
-  const router = useRouter();
   const [error, setError] = useState("");
 
-  // form initial state
+  // Initial state for personal information and processing options
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     dateOfBirth: "",
-    processMethod: "standard",
+    processMethod: "standard", // Default
   });
 
-  // handle submit file function
-  const inputChange = (e) => {
+  /**
+   * Handles changes for standard text and radio inputs (not the file input).
+   * @param {Object} e - The DOM event object.
+   */
+  const handleInputChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
 
-  const handleFormChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // to do: I need to  see if i can move this array outside.
-      const fileType = [
-        "image/jpe",
-        "image/png",
-        "mage/jpg",
-        "application/pdf",
-      ];
-      if (!fileType.includes(file.type)) {
-        setError("please upload a PDF or image");
+  /**
+   * the file input change, validates the file type, and updates the file state.
+   * @param {Object} e - The DOM event object.
+   */
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files?.[0]; // Use optional chaining for safety
+
+    if (selectedFile) {
+      // Check if the selected file's MIME type is in our allowed list
+      if (!ALLOWED_MIME_TYPES.includes(selectedFile.type)) {
+        setError(
+          "Invalid file type. Please upload a PDF, JPEG, or PNG document."
+        );
+        setFile(null);
         return;
       }
-      setFile(file);
+      // If valid, store the file and clear any previous errors
+      setFile(selectedFile);
       setError("");
     }
   };
 
-  //submit function
-
+  /**
+   * Submits the form data and file to the backend API.
+   * Handles loading state, error display, and navigation upon success.
+   * @param {Object} e - The DOM event object.
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     if (!file) {
-      setError("Please select a file");
+      setError("Please select a document to upload.");
       setLoading(false);
       return;
     }
+
     try {
+      // data payload using the FormData object for file uploads
       const submitData = new FormData();
       submitData.append("file", file);
       submitData.append("firstName", formData.firstName);
       submitData.append("lastName", formData.lastName);
       submitData.append("dateOfBirth", formData.dateOfBirth);
-      // submitData.append("processingMethod", formData.processMethod);
+      submitData.append("processingMethod", formData.processMethod);
 
-      const response = await axios.post(
-        "http://localhost:3001/api/process",
-        submitData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      // Use axios to post the multipart/form-data to the API
+      const response = await axios.post(API_ENDPOINT, submitData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-      // Navigate to results page with data
+      // Navigate to the results page, passing the response data via a URL query string
       const queryString = `data=${encodeURIComponent(
         JSON.stringify(response.data)
       )}`;
-      // router.push({
-      //   pathname: "/resultDisplay",
-      //   query: { data: JSON.stringify(response.data) },
-      // });
-      router.push(`./results?${queryString}`);
+      // Replaced Next.js router.push with native window.location.href for broader compatibility
+      window.location.href = `./results?${queryString}`;
     } catch (err) {
+      // Handle API errors or network issues
+      console.error("Submission error:", err);
       setError(
         err.response?.data?.error ||
-          "An error occurred while processing the document"
+          "A network or processing error occurred. Please try again."
       );
     } finally {
       setLoading(false);
@@ -94,15 +111,19 @@ export default function uploadForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-          Document Processor
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 font-['Inter']">
+      <div className="max-w-md mx-auto bg-white rounded-xl shadow-2xl p-8 transition duration-300 hover:shadow-blue-300/50">
+        <h1 className="text-3xl font-extrabold text-gray-900 mb-8 text-center border-b pb-3">
+          Secure Document Processor
         </h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Personal Information */}
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <p className="text-sm text-gray-600 mb-6">
+            Please fill in your details and upload the document for processing.
+          </p>
+
+          {/* Personal Information Fields */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 First Name
@@ -111,8 +132,8 @@ export default function uploadForm() {
                 type="text"
                 name="firstName"
                 value={formData.firstName}
-                onChange={inputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 transition duration-150"
                 required
               />
             </div>
@@ -124,8 +145,8 @@ export default function uploadForm() {
                 type="text"
                 name="lastName"
                 value={formData.lastName}
-                onChange={inputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 transition duration-150"
                 required
               />
             </div>
@@ -139,13 +160,13 @@ export default function uploadForm() {
               type="date"
               name="dateOfBirth"
               value={formData.dateOfBirth}
-              onChange={inputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={handleInputChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 transition duration-150"
               required
             />
           </div>
 
-          {/* File Upload */}
+          {/* File Upload Section */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Document Upload
@@ -153,62 +174,86 @@ export default function uploadForm() {
             <input
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
-              onChange={handleFormChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={handleFileChange}
+              className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
               required
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Supported formats: PDF, JPEG, PNG
+            <p className="text-xs text-gray-500 mt-2">
+              Supported formats: PDF, JPEG, PNG. Maximum size 5MB.
             </p>
           </div>
 
-          {/* Processing Method */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          {/* Processing Method Selector */}
+          <fieldset>
+            <legend className="block text-sm font-medium text-gray-700 mb-2">
               Processing Method
-            </label>
-            <div className="space-y-2">
-              <label className="flex items-center">
+            </legend>
+            <div className="space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <label className="flex items-center cursor-pointer">
                 <input
                   type="radio"
                   name="processMethod"
                   value="standard"
                   checked={formData.processMethod === "standard"}
-                  onChange={inputChange}
-                  className="mr-2"
+                  onChange={handleInputChange}
+                  className="mr-3 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
-                <span className=" font-medium text-gray-700 mb-2">
-                  Standard Extraction
+                <span className="font-medium text-gray-700">
+                  Standard Extraction (Fastest)
                 </span>
               </label>
-              <label className="flex items-center">
+              <label className="flex items-center cursor-pointer">
                 <input
                   type="radio"
                   name="processMethod"
                   value="ai"
                   checked={formData.processMethod === "ai"}
-                  onChange={inputChange}
-                  className="mr-2"
+                  onChange={handleInputChange}
+                  className="mr-3 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
-                <span className=" font-medium text-gray-700 mb-2">
-                  AI Extraction
+                <span className="font-medium text-gray-700">
+                  AI Extraction (High Accuracy, may take longer)
                 </span>
               </label>
             </div>
-          </div>
+          </fieldset>
 
+          {/* Error Display */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className="bg-red-50 border border-red-300 text-red-700 p-3 rounded-lg text-sm font-medium">
               {error}
             </div>
           )}
 
+          {/* Submission Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-offset-2 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Processing..." : "Process Document"}
+            {loading ? (
+              <svg
+                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            ) : null}
+            {loading ? "Processing Document..." : "Submit & Process Document"}
           </button>
         </form>
       </div>
