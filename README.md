@@ -20,6 +20,5 @@ Open [http://localhost:3000]
 
 Open [http://localhost:3001]
 
-### Open this project on vercel
 
-[https://personal-webpage-kbhc-git-development-nothil.vercel.app/](https://personal-webpage-kbhc-git-development-nothil.vercel.app/)
+
