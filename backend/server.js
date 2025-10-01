@@ -52,6 +52,7 @@ const standardProcessor = require("./utils/standardProcessing");
 const { calculateAge, constructFullName } = require("./utils/helpers");
 
 // Routes
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 app.post("/api/process", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
