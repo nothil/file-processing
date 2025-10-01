@@ -82,7 +82,7 @@ export default function uploadForm() {
       //   pathname: "/resultDisplay",
       //   query: { data: JSON.stringify(response.data) },
       // });
-      router.push(`/resultDisplay?${queryString}`);
+      router.push(`./results?${queryString}`);
     } catch (err) {
       setError(
         err.response?.data?.error ||
