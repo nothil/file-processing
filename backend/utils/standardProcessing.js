@@ -39,7 +39,7 @@ class StandardProcessor {
       const {
         data: { text },
       } = await tesseract.recognize(filePath, "eng", {
-        logger: (m) => console.log(m), // Remove in production
+        logger: (m) => console.log(m),
       });
       return text;
     } catch (error) {
@@ -48,7 +48,6 @@ class StandardProcessor {
   }
 
   structureExtractedData(text) {
-    // Basic pattern matching for common document elements
     const patterns = {
       email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
       phone: /(\+\d{1,3}[-.]?)?\(?\d{3}\)?[-.]?\d{3}[-.]?\d{4}/g,
@@ -67,7 +66,7 @@ class StandardProcessor {
 
     // Extract lines with potential meaningful data
     const lines = text.split("\n").filter((line) => line.trim().length > 5);
-    structured.meaningfulLines = lines.slice(0, 10); // First 10 meaningful lines
+    structured.meaningfulLines = lines.slice(0, 10);
 
     return structured;
   }
